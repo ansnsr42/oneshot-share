@@ -1,19 +1,54 @@
-# Binaries for programs and plugins
+################################
+# Go / Backend
+################################
+# Von Go gebaute Binaries
 *.exe
 *.exe~
 *.dll
 *.so
 *.dylib
-
-# Test binary, built with `go test -c`
-*.test
-
-# Output of the go coverage tool, specifically when used with LiteIDE
+*.test            # Test-Binary (`go test -c`)
+/zkn-share        # Unsere Server-Binary, egal wo sie entsteht
+*.zip             # ZIPs, falls du mal manuell packst
+# Coverage- & Benchmark-Files
+*.coverprofile
+*.bench.out
+# Go Tools Cache
 *.out
+# Editor-Hilfsdateien
+*.swp
+*.swo
 
-# go.sum should be committed
-!go.sum
+################################
+# AWS CDK / IaC
+################################
+.cdk.staging/
+cdk.out/
 
-# CDK asset staging directory
-.cdk.staging
-cdk.out
+################################
+# Node / React-Frontend
+################################
+# Abhängigkeiten & Lockfiles
+node_modules/
+# Build-Artefakte
+dist/
+.vite/
+# Logs & Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+# Env-Dateien (falls du API-Keys etc. lokal hältst)
+.env*
+!.env.example     # Beispiel-Template darf committed werden
+
+################################
+# Allgemein / Editoren
+################################
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.iml
+*.tmp
+*.bak
+
