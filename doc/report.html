@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>One‑Shot File Service on AWS – Project Report</title>
+  <style>
+    body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;margin:0;padding:0;line-height:1.6;background:#f9fafb;color:#111827}
+    header{background:#1e40af;color:#fff;padding:2rem 1rem;text-align:center}
+    header h1{margin:0;font-size:2rem}
+    main{max-width:960px;margin:auto;padding:2rem 1rem}
+    h2{color:#1e3a8a;margin-top:2.5rem;font-size:1.5rem}
+    figure{margin:1.5rem 0;text-align:center;border:2px dashed #cbd5e1;padding:1rem;background:#fff}
+    figcaption{margin-top:.5rem;font-style:italic;color:#475569}
+    table{width:100%;border-collapse:collapse;margin:1rem 0;background:#fff}
+    th,td{border:1px solid #cbd5e1;padding:.5rem;text-align:left}
+    th{background:#e2e8f0}
+    code{background:#e2e8f0;padding:.1rem .3rem;border-radius:4px}
+    footer{margin:4rem 0;text-align:center;font-size:.9rem;color:#475569}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>One‑Shot File Service on AWS</h1>
+  </header>
+
+  <main>
+    <h2>1. Project Goal</h2>
+    <p>Create a lightweight web service that lets users upload any file <strong>exactly once</strong> and share a single‑use download link.The implementation takes place in Amazon Web Services in order to operate this service in the cloud.</p>
+
+    <h2>2. Feature Highlights</h2>
+    <ul>
+      <li>Simple HTML/JS front‑end (React + Vite) for drag‑and‑drop upload</li>
+      <li>Go back‑end exposes two endpoints: <code>POST /upload</code> &amp; <code>GET /d/:id</code></li>
+      <li>Uploads stored as files on disk; metadata in SQLite</li>
+      <li>Download link becomes <em>410 Gone</em> after first successful fetch</li>
+      <li>Zero external dependencies – perfect for cheap t3a.micro</li>
+    </ul>
+
+    <h2>3. Architecture Overview</h2>
+    <figure>
+      <img src="./img/arch.png" alt="High‑level architecture diagram" style="max-width:100%;height:auto;" />
+      <figcaption>Figure 1 – Overall AWS architecture</figcaption>
+    </figure>
+
+    <h3>3.1 AWS Components</h3>
+    <table>
+      <thead>
+        <tr><th>Service</th><th>Purpose in Project</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>EC2 (t3a.micro)</td><td>Hosts Go API + Nginx static front‑end</td></tr>
+        <tr><td>Elastic IP</td><td>Provides permanent public address</td></tr>
+        <tr><td>Security Group</td><td>Opens ports 80 &amp; 22 (SSH)</td></tr>
+      </tbody>
+    </table>
+
+    <h2>4. Implementation Details</h2>
+    <h3>4.1 Back‑End (Go 1.23)</h3>
+    <ul>
+      <li><code>chi</code> router for minimal routing</li>
+      <li><code>sqlite3</code> stores <code>id | path | name | used</code></li>
+      <li>Systemd unit <code>zkn-share.service</code> ensures auto‑restart</li>
+    </ul>
+
+    <h3>4.2 Front‑End (React 18 + Vite 5)</h3>
+    <ul>
+      <li>Single static SPA in <code>dist/</code>; served by Nginx</li>
+      <li>Relative API calls → easy prod/dev switch</li>
+    </ul>
+
+    <figure>
+      <img src="img/front.png" alt="Upload UI screenshot" style="max-width:100%;height:auto;" />
+      <figcaption>Figure 2 – Upload screen</figcaption>
+    </figure>
+
+
+     <figure>
+      <img src="img/front2.png" alt="Upload UI screenshot" style="max-width:100%;height:auto;" />
+      <figcaption>Figure 3 – Uploaded file</figcaption>
+    </figure>
+
+    <h2>5. Benchmarks</h2>
+    <p>All measurements were executed from the developer workstation (100 Mbit/s uplink) using <code>ab</code>. Test file size: <strong>20 MB</strong>.</p>
+
+    <h3>5.1 Download (100 req, 50 concurrency)</h3>
+    <pre><code>$ ab -n 100 -c 50 http://http://ec2-18-209-82-213.compute-1.amazonaws.com/test.bin
+Requests/sec      : 0.46
+Transfer rate     : 9.2 MB/s
+90% completed in  : 142 s
+Time per request  : 108.9 s (mean)
+Failed requests   : 1 (length mismatch)
+</code></pre>
+
+  <h2>6. Deployment Pipeline</h2>
+    <ul>
+      <li>🗂️ Source code: <a href="https://github.com/ansnsr42/oneshot-share" target="_blank" rel="noopener">github.com/ansnsr42/oneshot-share</a></li>
+      <li>Local build (Go binary + Vite <code>dist/</code>)</li>
+      <li>Upload to EC2 via <code>git pull</code></li>
+      <li><code>systemctl restart one-share</code> &amp; <code>nginx -s reload</code> – zero downtime</li>
+    </ul>
+
+    <h2>7. Conclusion</h2>
+    <p>This project shows how a tiny stack (Go + Nginx + SQLite) enables a full-fledged AWS service. Through Elastic IP, the service is permanently under <code>http://ec2-18-209-82-213.compute-1.amazonaws.com/</code> accessible. Although a t3a.micro instance only delivers ~30 Mbit/s, this is sufficient for school and demo purposes; Scaling is possible at any time.</p>
+  </main>
+
+  <footer>
+     Cloud Computing Course
+  </footer>
+</body>
+</html>
