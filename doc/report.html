@@ -42,7 +42,8 @@
       <img src="./img/arch.png" alt="High‑level architecture diagram" style="max-width:100%;height:auto;" />
       <figcaption>Figure 1 – Overall AWS architecture</figcaption>
     </figure>
-
+</br>
+</br>
     <h3>3.1 AWS Components</h3>
     <table>
       <thead>
@@ -92,7 +93,7 @@ Time per request  : 108.9 s (mean)
 Failed requests   : 1 (length mismatch)
 </code></pre>
 
-  <h2>6. Deployment Pipeline</h2>
+  <h2>6. Deployment</h2>
     <ul>
       <li>🗂️ Source code: <a href="https://github.com/ansnsr42/oneshot-share" target="_blank" rel="noopener">github.com/ansnsr42/oneshot-share</a></li>
       <li>Local build (Go binary + Vite <code>dist/</code>)</li>
@@ -104,8 +105,6 @@ Failed requests   : 1 (length mismatch)
     <p>This project shows how a tiny stack (Go + Nginx + SQLite) enables a full-fledged AWS service. Through Elastic IP, the service is permanently under <code>http://ec2-18-209-82-213.compute-1.amazonaws.com/</code> accessible. Although a t3a.micro instance only delivers ~30 Mbit/s, this is sufficient for school and demo purposes; Scaling is possible at any time.</p>
   </main>
 
-  <footer>
-     Cloud Computing Course
-  </footer>
+
 </body>
 </html>
