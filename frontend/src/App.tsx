@@ -1,13 +1,10 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import UploadView from './UploadView';
-import DownloadView from './DownloadView';
-
+import Upload from './Upload';
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<UploadView />} />
-        <Route path="/d/:id" element={<DownloadView />} />
+        <Route path="/" element={<Upload />} />
       </Routes>
     </BrowserRouter>
   );

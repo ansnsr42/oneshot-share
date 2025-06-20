@@ -1,33 +1,36 @@
 import { useState } from 'react';
-import { encrypt } from './crypto';
 
-const API = import.meta.env.VITE_API ?? 'https://files.example.com';
-
-export default function UploadView() {
+export default function Upload() {
+  const [file, setFile] = useState<File | null>(null);
   const [link, setLink] = useState<string>();
 
-  async function handleSelect(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
+  async function doUpload() {
     if (!file) return;
-
-    const { cipher, keyB64 } = await encrypt(file);
-    const resp = await fetch(`${API}/upload`, {
+    const res = await fetch(`/upload?name=${encodeURIComponent(file.name)}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/octet-stream' },
-      body: cipher
+      body: await file.arrayBuffer()
     });
-
-    const { link: dl } = await resp.json();
-    setLink(`${dl}#k=${keyB64}`);
+    const { link } = await res.json();
+    setLink(link);                 // z. B.  /d/abc123
   }
 
   return (
-    <div className="p-8">
-      <h1 className="text-2xl mb-4">Zero-Knowledge Share</h1>
-      <input type="file" onChange={handleSelect} />
+    <div className="p-8 max-w-md mx-auto">
+      <h1 className="text-xl mb-4">One-Shot File Share</h1>
+
+      <input type="file" onChange={e => setFile(e.target.files?.[0] || null)} />
+      <button
+        disabled={!file}
+        onClick={doUpload}
+        className="ml-2 px-4 py-1 bg-blue-600 text-white rounded disabled:opacity-40"
+      >
+        Upload
+      </button>
+
       {link && (
-        <p className="mt-4 break-all">
-          Share Link:&nbsp;<a href={link}>{link}</a>
+        <p className="mt-6 break-all">
+          Link&nbsp;:&nbsp;<a href={link}>{window.location.origin + link}</a>
         </p>
       )}
     </div>
