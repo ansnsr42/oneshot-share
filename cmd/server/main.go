@@ -24,7 +24,6 @@ var (
 
 func main() {
 	os.MkdirAll(dataDir, 0o750)
-
 	var err error
 	db, err = sql.Open("sqlite3", filepath.Join(dataDir, "meta.db"))
 	if err != nil { log.Fatal(err) }
@@ -34,13 +33,13 @@ func main() {
 	r.Use(cors)
 
 	r.Post("/upload", handleUpload)
-	r.Get("/d/{id}", handleDownload)
+	r.Get("/d/{id}",    handleDownload)
 
 	log.Println("listening on :8080")
 	log.Fatal(http.ListenAndServe(":8080", r))
 }
 
-// ---------- UPLOAD ----------
+// ────────── UPLOAD ──────────
 func handleUpload(w http.ResponseWriter, r *http.Request) {
 	name := r.URL.Query().Get("name")
 	if name == "" { http.Error(w, "missing name", 400); return }
@@ -54,24 +53,22 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), 500); return
 	}
 
-	if _, err := db.Exec(
-		`INSERT INTO meta(id,path,name,used) VALUES(?,?,?,0)`,
-		id, path, name); err != nil {
-		http.Error(w, err.Error(), 500); return
-	}
+	db.Exec(`INSERT INTO meta(id,path,name,used) VALUES(?,?,?,0)`,
+		id, path, name)
 
 	type resp struct{ Link string `json:"link"` }
 	json.NewEncoder(w).Encode(resp{Link: "/d/" + id})
 }
 
-// ---------- DOWNLOAD ----------
+// ───────── DOWNLOAD ─────────
 func handleDownload(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 
 	var path, name string
 	var used int
-	err := db.QueryRow(`SELECT path,name,used FROM meta WHERE id=?`, id).
-		Scan(&path, &name, &used)
+	err := db.QueryRow(
+		`SELECT path,name,used FROM meta WHERE id=?`, id,
+	).Scan(&path, &name, &used)
 	if err == sql.ErrNoRows || used == 1 {
 		http.Error(w, "Gone", 410); return
 	} else if err != nil {
@@ -82,13 +79,12 @@ func handleDownload(w http.ResponseWriter, r *http.Request) {
 		fmt.Sprintf(`attachment; filename="%s"`, url.PathEscape(name)))
 	http.ServeFile(w, r, path)
 
-	go func() {                     // nach Auslieferung: markieren + löschen
+	go func() {
 		db.Exec(`UPDATE meta SET used=1 WHERE id=?`, id)
 		time.Sleep(5 * time.Second)
 		os.Remove(path)
 	}()
 }
-
 // ---------- Helpers ----------
 func migrate() {
 	db.Exec(`CREATE TABLE IF NOT EXISTS meta(
@@ -100,7 +96,9 @@ func migrate() {
 }
 
 func env(k, d string) string {
-	if v := os.Getenv(k); v != "" { return v }
+	if v := os.Getenv(k); v != "" {
+		return v
+	}
 	return d
 }
 
@@ -109,7 +107,10 @@ func cors(next http.Handler) http.Handler {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
-		if r.Method == http.MethodOptions { w.WriteHeader(204); return }
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
 		next.ServeHTTP(w, r)
 	})
 }
